@@ -33,7 +33,7 @@ is( "$r", "$p2", 'PPN match' );
 
 ## level 1
 
-$e = picamod( iln => 20, add => '144Z $all', id => 'abc:ppn:123' );
+$e = picamod( iln => 20, add => '144Z $all', del => '144Z', id => 'abc:ppn:123' );
 $r = $e->apply( $p1 );
 is ("$r", "$p1", "no modification" );
 

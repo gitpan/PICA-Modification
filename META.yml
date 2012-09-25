@@ -16,17 +16,18 @@ name: PICA-Modification
 requires:
   Carp: 0
   Exporter: 0
+  LWP::Simple: 0
   PICA::Record: 0
   Scalar::Util: 0
   Test::JSON::Entails: 0
   Test::More: 0.96
   Time::Stamp: 0
   parent: 0
-  perl: v5.10.0
+  perl: v5.10.1
   strict: 0
   warnings: 0
 resources:
   bugtracker: https://github.com/gbv/PICA-Modification/issues
   homepage: https://github.com/gbv/PICA-Modification
   repository: https://github.com/gbv/PICA-Modification.git
-version: 0.134
+version: 0.14

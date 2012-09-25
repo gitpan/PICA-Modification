@@ -1,6 +1,6 @@
 package PICA::Modification::TestQueue;
 {
-  $PICA::Modification::TestQueue::VERSION = '0.134';
+  $PICA::Modification::TestQueue::VERSION = '0.14';
 }
 #ABSTRACT: Unit test implementations of PICA::Modification::Queue
 
@@ -80,11 +80,11 @@ sub run {
     is scalar @$list, 3, 'limit';
     is $list->[0]->{id}, 'doz:ppn:12', 'page';
 
-    $mod = PICA::Modification->new( add => '028A $xfoo', id => 'ab:ppn:1' );
+    $mod = PICA::Modification->new( add => '028A $xfoo', del => '028A', id => 'ab:ppn:1' );
     $id2 = $self->update( $id => $mod );
     is $id2, $id, 'update allowed';
     $mod = $self->get($id);
-    is $mod->{del}, '', 'update changed';
+    is $mod->{del}, '028A', 'update changed';
     is $mod->{add}, '028A $xfoo', 'update changed';
 
 
@@ -107,7 +107,35 @@ sub run {
 __END__
 =pod
 
-=encoding utf-8
+=head1 NAME
+
+PICA::Modification::TestQueue - Unit test implementations of PICA::Modification::Queue
+
+=head1 VERSION
+
+version 0.14
+
+=head1 SYNOPSIS
+
+    use PICA::Modification::TestQueue;
+
+    test_queue $queue, 'tested queue';
+
+=head1 DESCRIPTION
+
+This package exports the function C<test_queue> to run a simple unit test on a
+L<PICA::Modification::Queue>.
+
+=head1 AUTHOR
+
+Jakob Voß <voss@gbv.de>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2012 by Jakob Voß.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 

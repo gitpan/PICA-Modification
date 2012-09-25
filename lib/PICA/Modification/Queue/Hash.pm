@@ -1,6 +1,6 @@
 package PICA::Modification::Queue::Hash;
 {
-  $PICA::Modification::Queue::Hash::VERSION = '0.134';
+  $PICA::Modification::Queue::Hash::VERSION = '0.14';
 }
 #ABSTRACT: In-memory collection of modifications
 
@@ -75,10 +75,35 @@ sub list {
 
 1;
 
+
 __END__
 =pod
 
+=head1 NAME
+
+PICA::Modification::Queue::Hash - In-memory collection of modifications
+
+=head1 VERSION
+
+version 0.14
+
+=head1 DESCRIPTION
+
+PICA::Modification::Queue::Hash implements a L<PICA::Modification::Queue> that
+directly stored modification requests as references in memory.
+
 =encoding utf-8
+
+=head1 AUTHOR
+
+Jakob Voß <voss@gbv.de>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2012 by Jakob Voß.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 

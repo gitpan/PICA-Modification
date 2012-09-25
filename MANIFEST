@@ -1,3 +1,4 @@
+Changes
 LICENSE
 MANIFEST
 META.yml
@@ -6,6 +7,7 @@ README
 lib/PICA/Modification.pm
 lib/PICA/Modification/Queue.pm
 lib/PICA/Modification/Queue/Hash.pm
+lib/PICA/Modification/Queue/Smart.pm
 lib/PICA/Modification/Request.pm
 lib/PICA/Modification/TestQueue.pm
 t/00_compile.t
@@ -13,3 +15,4 @@ t/10_errors.t
 t/20_apply.t
 t/30_request.t
 t/40_queue.t
+t/50_smart.t

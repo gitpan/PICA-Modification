@@ -1,6 +1,6 @@
 package PICA::Modification::Queue::Smart;
 {
-  $PICA::Modification::Queue::Smart::VERSION = '0.14';
+  $PICA::Modification::Queue::Smart::VERSION = '0.15';
 }
 #ABSTRACT: Queued list of modification requests with checks
 
@@ -25,7 +25,7 @@ sub new {
     
     $args{check} ||= 60;
 
-    if (!ref $args{via} and /^https?:\/\// ~~ $args{via}) {
+    if (($args{via} // '') =~ /^https?:\/\//) {
         $args{unapi} = $args{via};
         $args{via} = sub {
             my $id = shift;
@@ -46,17 +46,18 @@ sub get {
     my ($self, $id) = @_;
     my $request = $self->{queue}->get($id) || return;
 
+    return $request if $request->{status} != 0;
+
+    # TODO: reject on error?
+
     my $last = $request->{updated} || $request->{created};
     my $next = gmstamp(time()-$self->{check});
 
     return $request if ($next cmp $last) == -1;
 
-    if ( 0 ~~ $self->pending($request) ) {
-        $request->{status} = 1;
-        $self->{queue}->update( $id => $request );
-    }
-
-    $request;
+    $request->update( 0 ~~ $self->pending($request) ? 1 : 0 );
+    $self->{queue}->update( $id => $request );
+    $self->{queue}->get($id);
 }
 
 sub request {
@@ -103,7 +104,7 @@ PICA::Modification::Queue::Smart - Queued list of modification requests with che
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 SYNOPSIS
 

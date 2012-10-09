@@ -1,2 +1,6 @@
+2012-09-26  0.15
+    * Made modifications idempotent
+    * Fixed dependencies
+
 2012-09-25  0.14
-    * Firs release at CPAN
+    * First release at CPAN

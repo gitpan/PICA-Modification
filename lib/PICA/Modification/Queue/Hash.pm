@@ -1,6 +1,6 @@
 package PICA::Modification::Queue::Hash;
 {
-  $PICA::Modification::Queue::Hash::VERSION = '0.14';
+  $PICA::Modification::Queue::Hash::VERSION = '0.15';
 }
 #ABSTRACT: In-memory collection of modifications
 
@@ -85,7 +85,7 @@ PICA::Modification::Queue::Hash - In-memory collection of modifications
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 DESCRIPTION
 

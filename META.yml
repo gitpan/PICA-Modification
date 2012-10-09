@@ -1,5 +1,5 @@
 ---
-abstract: 'Modification of an identified PICA+ record'
+abstract: 'Idempotent modifications of identified PICA+ records'
 author:
   - 'Jakob Voß <voss@gbv.de>'
 build_requires:
@@ -17,10 +17,11 @@ requires:
   Carp: 0
   Exporter: 0
   LWP::Simple: 0
-  PICA::Record: 0
+  PICA::Record: 0.584
   Scalar::Util: 0
   Test::JSON::Entails: 0
   Test::More: 0.96
+  Text::Diff: 0
   Time::Stamp: 0
   parent: 0
   perl: v5.10.1
@@ -30,4 +31,4 @@ resources:
   bugtracker: https://github.com/gbv/PICA-Modification/issues
   homepage: https://github.com/gbv/PICA-Modification
   repository: https://github.com/gbv/PICA-Modification.git
-version: 0.14
+version: 0.15

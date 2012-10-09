@@ -27,6 +27,8 @@ my $mod = PICA::Modification->new(
 $req = PICA::Modification::Request->new( $mod );
 $mod->{id} = '';
 
-is $req->{id}, 'doz:ppn:123', 'turn modification into request'; 
+is $req->attributes->{id}, 'doz:ppn:123', 'turn modification into request'; 
+is $req->attributes->{status}, 0, 'status 0 by default';
+ok $req->attributes->{created}, 'request has timestamp of creation';
 
 done_testing;

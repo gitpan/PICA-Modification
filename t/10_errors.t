@@ -6,15 +6,15 @@ use PICA::Record;
 use PICA::Modification;
 
 my %id = (id => 'opac-de-23:ppn:311337856'); 
-my $mod = PICA::Modification->new( %id ); 
+my $mod = PICA::Modification->new( %id, del => '012A' ); 
 ok !$mod->error, 'ok';
 is $mod->{ppn}, 311337856, 'ppn set';
 is $mod->{dbkey}, 'opac-de-23', 'dbkey set';
 
 my @malformed = (
- 	[ { id => '' }, { id => 'missing record identifier' } ],
- 	[ { }, { id => 'missing record identifier' } ],
-	[ { id => 'ab:cd' }, { id => 'malformed record identifier' } ],
+ 	[ { id => '' }, { id => 'missing record identifier', del => 'edit must not be empty' } ],
+ 	[ { }, { id => 'missing record identifier', del => 'edit must not be empty' } ],
+	[ { id => 'ab:cd' }, { id => 'malformed record identifier', del => 'edit must not be empty' } ],
 	[ {	%id, add => '144Z $a' }, { add => 'malformed fields to add' } ], 
 	[ {	%id, del => '144Z $a' }, { del => 'malformed fields to remove', iln => 'missing ILN for remove'} ], 
 	[ { %id, add => '144Z $afoo' }, { iln => 'missing ILN for add', del => 'fields to add must also be deleted' } ],

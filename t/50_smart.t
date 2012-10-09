@@ -13,13 +13,16 @@ sub picamod { PICA::Modification->new(@_) }
 throws_ok { PICA::Modification::Queue::Smart->new( check => 1 ); }
     qr{missing 'via'};
 
+my $queue = PICA::Modification::Queue::Smart->new( check => 1, via => 'http://example.org/' );
+isa_ok $queue, 'PICA::Modification::Queue::Smart';
+
 my $pica = "003@ \$0123\n012A \$xfoo";
 my $unapi = sub {
     my $id = shift;
     return PICA::Record->new($pica);
 };
 
-my $queue = PICA::Modification::Queue::Smart->new( check => 1, via => $unapi );
+$queue = PICA::Modification::Queue::Smart->new( check => 1, via => $unapi );
 isa_ok $queue, 'PICA::Modification::Queue::Smart';
 isa_ok $queue->{via}->(789), 'PICA::Record';
 

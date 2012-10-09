@@ -1,8 +1,8 @@
 package PICA::Modification::Queue;
 {
-  $PICA::Modification::Queue::VERSION = '0.14';
+  $PICA::Modification::Queue::VERSION = '0.15';
 }
-#ABSTRACT: Queued list of modification requests on PICA+ records
+#ABSTRACT: Queued list of modification requests of PICA+ records
 
 use strict;
 use warnings;
@@ -39,11 +39,11 @@ __END__
 
 =head1 NAME
 
-PICA::Modification::Queue - Queued list of modification requests on PICA+ records
+PICA::Modification::Queue - Queued list of modification requests of PICA+ records
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 SYNOPSIS
 
@@ -75,6 +75,9 @@ modification requests.
 The default implementation is a in-memory (non-persistent) hash
 (L<PICA::Modification::Queue::Hash>). Additional types of queues can be
 implemented in the C<PICA::Modification::Queue::> module namespace.
+
+To test additional implementations of queues, the unit testing package 
+L<PICA::Modification::TestQueue> should be used.
 
 =head1 METHODS
 

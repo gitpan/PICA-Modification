@@ -1,25 +1,37 @@
 package PICA::Modification;
 {
-  $PICA::Modification::VERSION = '0.14';
+  $PICA::Modification::VERSION = '0.15';
 }
-#ABSTRACT: Modification of an identified PICA+ record
+#ABSTRACT: Idempotent modifications of identified PICA+ records
 
 use strict;
 use warnings;
 use v5.10;
 
-use PICA::Record;
 use parent 'Exporter';
 
+use PICA::Record 0.584;
+use Scalar::Util qw(blessed);
+
+our @ATTRIBUTES = qw(id iln epn del add);
 
 sub new {
-	my ($class, %attributes) = @_;
+	my $class = shift;
+	my $attributes = @_ % 2 ? (blessed $_[0] ? $_[0]->attributes : $_[0]) : {@_};
 
+    no strict 'refs';
     my $self = bless {
-		map { $_ => $attributes{$_} } qw(id iln epn del add)
+		map { $_ => $attributes->{$_} } @{ $class.'::ATTRIBUTES' }
 	}, $class;
 
 	$self->check;
+}
+
+sub attributes {
+	my $self = shift;
+
+    no strict 'refs';
+	return { map { $_ => $self->{$_} } @{ ref($self).'::ATTRIBUTES' } };
 }
 
 
@@ -72,11 +84,12 @@ sub check {
 
 	my @del = grep { $_ !~ /^\s*$/ } split(/\s*,\s*/, $self->{del});
 
-	$self->error( del => "malformed fields to remove" )
+	$self->error( del => 'malformed fields to remove' )
         if grep { $_ !~  qr{^[012]\d\d[A-Z@](/\d\d)?$} } @del;
 
 	$self->error( epn => 'missing EPN for remove' )
 		if !$self->{epn} and grep { /^2/ } @del;
+
 	$self->error( iln => 'missing ILN for remove' )
 		if !$self->{iln} and grep { /^1/ } @del;
 
@@ -87,16 +100,11 @@ sub check {
 
     $self->{del} = join (',', sort @del);
 
+    if (!$self->{add} and !$self->{del} and !$self->error('del')) {
+        $self->error( del => 'edit must not be empty' );
+    }
+
     return $self;
-}
-
-
-sub attributes {
-	my $self = shift;
-
-	return {
-		map { $_ => $self->{$_} } qw(id iln epn del add)
-	};
 }
 
 
@@ -157,26 +165,40 @@ sub apply {
 
     # Level 1
 	if (@level1 or $add->field(qr/^1../)) {
-
 		if ($strict and !$pica->holdings($iln)) {
 			$self->error('iln', 'ILN not found');
 			return;
 		}
+    }
 
-		foreach my $h ( $pica->holdings ) {
-			if ($iln eq ($h->iln // '')) {
-				$h->remove( map { $_ =~ qr{/} ? $_ : "$_/.." } @level1 );
-				$h->append( $add->field(qr/^1/) );
-			} 
-			$result->append( $h->fields );
-		}
-	}
-
-	# TODO: Level 2
+    foreach my $h ( $pica->holdings ) {
+        if ($iln and $iln eq ($h->iln // '')) {
+            @level1 = map { $_ =~ qr{/} ? $_ : ($_,"$_/..") } @level1; 
+            $h->remove( @level1 );
+            $h->append( $add->field(qr/^1/) );
+        } 
+        $result->append( $h->fields );
+	    # TODO: Level 2
+    }
 	
     $result->sort;
 
     return $result;
+}
+
+
+sub diff {
+    my $self = shift;
+    my $before = shift;
+
+    my $after = $self->apply( @_ ) or return;
+    require Text::Diff;
+
+    my $l = scalar $before->fields + scalar $after->fields;
+    my $diff = Text::Diff::diff(\$before,\$after,{CONTEXT => $l});
+    $diff =~ s/^.+$//m;
+
+    return $diff;
 }
 
 1;
@@ -188,11 +210,22 @@ __END__
 
 =head1 NAME
 
-PICA::Modification - Modification of an identified PICA+ record
+PICA::Modification - Idempotent modifications of identified PICA+ records
 
 =head1 VERSION
 
-version 0.14
+version 0.15
+
+=head1 SYNOPSIS
+
+  use PICA::Modification;
+
+  # delete field '0123A' from record 'foo:ppn:123'
+  my $mod = PICA::Modification->new( 
+      id => 'foo:ppn:123', del => '0123A' 
+  );
+
+  $after = $mod->apply( $before );
 
 =head1 DESCRIPTION
 
@@ -229,22 +262,15 @@ include level 2 fields.
 A modification instance may be malformed. A mapping from malformed attributes
 to error messages is stored together with the PICA::Modification object.
 
+PICA::Modification is extended to L<PICA::Modification::Request>. Collections
+of modifications can be stored in a L<PICA::Modification::Queue>.
+
 =head1 METHODS
-
-=head2 new ( %attributes )
-
-Creates a new edit with given attributes. Missing attributes are set to the
-empty string. On creation, all attributes are checked and normalized.
 
 =head2 check
 
 Checks and normalized all attributes. A list of error messages is collected,
 each connected to the attribute that an error originates from.
-
-=head2 attributes
-
-Returns a hash reference with attributes of this modification (del, add, id,
-iln, epn).
 
 =head2 error( [ $attribute [ => $message ] ] )
 
@@ -258,9 +284,9 @@ record as L<PICA::Record> or C<undef> on malformed modifications.
 
 Only edits at level 0 and level 1 are supported by now.
 
-The argument C<strict> can be used to enable additional validation. Validation
-errors are also collected in the PICA::Modification object. A valid modification
-must:
+The experimental argument C<strict> can be used to enable additional
+validation. Validation errors are also collected in the PICA::Modification
+object. A valid modification must:
 
 =over 4
 
@@ -274,17 +300,22 @@ have ILN/EPN matching to the record's ILN/EPN (if given).
 
 =back
 
+=head2 diff
+
+TODO: Test this!
+
+=head2 new ( %attributes | {%attributes} | $modification )
+
+Creates a new modification with given attributes. Missing attributes are set to
+the empty string. On creation, all attributes are checked and normalized.
+
+=head2 attributes
+
+Returns a hash reference with attributes of this modification.
+
 =head1 SEE ALSO
 
 See L<PICA::Record> for information about PICA+ record format.
-
-PICA::Modification is extended to L<PICA::Modification::Request>. Collections
-of modifications can be stored in a L<PICA::Modification::Queue>.
-
-To test additional implementations of queues, the unit testing package 
-<PICA::Modification::TestQueue> should be used.
-
-See L<PICA::Modification::App> for applications build on top of this module.
 
 =encoding utf-8
 

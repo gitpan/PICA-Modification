@@ -9,7 +9,7 @@ use ExtUtils::MakeMaker 6.30;
 
 
 my %WriteMakefileArgs = (
-  "ABSTRACT" => "Modification of an identified PICA+ record",
+  "ABSTRACT" => "Idempotent modifications of identified PICA+ records",
   "AUTHOR" => "Jakob Vo\303\237 <voss\@gbv.de>",
   "BUILD_REQUIRES" => {
     "Test::Exception" => 0
@@ -25,16 +25,17 @@ my %WriteMakefileArgs = (
     "Carp" => 0,
     "Exporter" => 0,
     "LWP::Simple" => 0,
-    "PICA::Record" => 0,
+    "PICA::Record" => "0.584",
     "Scalar::Util" => 0,
     "Test::JSON::Entails" => 0,
     "Test::More" => "0.96",
+    "Text::Diff" => 0,
     "Time::Stamp" => 0,
     "parent" => 0,
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.14",
+  "VERSION" => "0.15",
   "test" => {
     "TESTS" => "t/*.t"
   }

@@ -1,6 +1,6 @@
 package PICA::Modification::TestQueue;
 {
-  $PICA::Modification::TestQueue::VERSION = '0.15';
+  $PICA::Modification::TestQueue::VERSION = '0.16';
 }
 #ABSTRACT: Unit test implementations of PICA::Modification::Queue
 
@@ -113,7 +113,7 @@ PICA::Modification::TestQueue - Unit test implementations of PICA::Modification:
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 SYNOPSIS
 

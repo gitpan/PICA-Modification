@@ -1,3 +1,7 @@
+2012-09-27  0.16
+    * Improved diff method
+    * Removed 'strict' option
+
 2012-09-26  0.15
     * Made modifications idempotent
     * Fixed dependencies

@@ -1,8 +1,8 @@
 package PICA::Modification;
 {
-  $PICA::Modification::VERSION = '0.15';
+  $PICA::Modification::VERSION = '0.16';
 }
-#ABSTRACT: Idempotent modifications of identified PICA+ records
+#ABSTRACT: Idempotent modification of an identified PICA+ record
 
 use strict;
 use warnings;
@@ -12,8 +12,10 @@ use parent 'Exporter';
 
 use PICA::Record 0.584;
 use Scalar::Util qw(blessed);
+use Text::Diff ();
 
 our @ATTRIBUTES = qw(id iln epn del add);
+
 
 sub new {
 	my $class = shift;
@@ -27,6 +29,7 @@ sub new {
 	$self->check;
 }
 
+
 sub attributes {
 	my $self = shift;
 
@@ -35,12 +38,27 @@ sub attributes {
 }
 
 
+sub error {
+    my $self = shift;
+
+    return (scalar keys %{$self->{errors}}) unless @_;
+    
+    my $attribute = shift;
+    return $self->{errors}->{$attribute} unless @_;
+
+    my $message = shift;
+    $self->{errors}->{$attribute} = $message;
+
+    return $message;
+}
+
+
 sub check {
 	my $self = shift;
 
 	$self->{errors} = { };
 
-	foreach my $attr (qw(id iln epn del add)) {
+	foreach my $attr (@ATTRIBUTES) {
 		my $value = $self->{$attr} // '';
 	    $value =~ s/^\s+|\s+$//g;
 		$self->{$attr} = $value;
@@ -104,59 +122,40 @@ sub check {
         $self->error( del => 'edit must not be empty' );
     }
 
+    if ( !$self->error('del') ) {
+        my @bad = grep { /^(003@|101@|203@)/; } @del;
+        if (@bad) {
+            $self->error( del => 'must not modify field: '.join(', ',@bad) );
+        }
+	}
+
     return $self;
-}
-
-
-sub error {
-    my $self = shift;
-
-    return (scalar keys %{$self->{errors}}) unless @_;
-    
-    my $attribute = shift;
-    return $self->{errors}->{$attribute} unless @_;
-
-    my $message = shift;
-    $self->{errors}->{$attribute} = $message;
-
-    return $message;
 }
 
 
 sub apply {
     my ($self, $pica, %args) = @_;
-	my $strict = $args{strict};
 
     return if $self->error;
 
 	if (!$pica) {
 		$self->error( id => 'record not found' );
 		return;
-	} elsif ( $strict ) {
-		if ( ($pica->ppn // '') ne $self->{ppn} ) {
-			$self->error( id => 'PPN does not match' );
-			return;
-    	}
-
-    	# TODO: check for disallowed fields to add/remove
 	}
-
-    my $iln = $self->{iln};
-    my $epn = $self->{epn};
-
-	# TODO: get ILN from record
-	if ( $strict and $epn ne '' and $iln eq '' ) {
-	    $self->error( iln => "ILN missing" );
+	if ( defined $pica->ppn and $pica->ppn ne $self->{ppn} ) {
+	    $self->error( id => 'PPN does not match' );
 		return;
-	}
+    }
 
     my $add = PICA::Record->new( $self->{add} || '' );
     my $del = [ split ',', $self->{del} ];
 
-    # new PICA record with all level0 fields but the ones to remove
     my @level0 = grep /^0/, @$del;
     my @level1 = grep /^1/, @$del;
     my @level2 = grep /^2/, @$del;
+
+    my $iln = $self->{iln};
+    my $epn = $self->{epn};
 
     # Level 0
     my $result = $pica->main;
@@ -164,11 +163,9 @@ sub apply {
     $result->append( $add->main );    
 
     # Level 1
-	if (@level1 or $add->field(qr/^1../)) {
-		if ($strict and !$pica->holdings($iln)) {
-			$self->error('iln', 'ILN not found');
-			return;
-		}
+	if (@level1 and !$pica->holdings($iln)) {
+		$self->error('iln', 'ILN not found');
+		return;
     }
 
     foreach my $h ( $pica->holdings ) {
@@ -178,6 +175,7 @@ sub apply {
             $h->append( $add->field(qr/^1/) );
         } 
         $result->append( $h->fields );
+
 	    # TODO: Level 2
     }
 	
@@ -187,16 +185,21 @@ sub apply {
 }
 
 
+
 sub diff {
-    my $self = shift;
-    my $before = shift;
+    my ($self, $record, $context) = @_;
 
-    my $after = $self->apply( @_ ) or return;
-    require Text::Diff;
+    my $result = $self->apply( $record ) or return;
 
-    my $l = scalar $before->fields + scalar $after->fields;
-    my $diff = Text::Diff::diff(\$before,\$after,{CONTEXT => $l});
-    $diff =~ s/^.+$//m;
+    $context //= (scalar $record->fields + scalar $result->fields);
+    
+    my $diff = Text::Diff::diff(
+        \($record->string),
+        \($result->string),
+        {CONTEXT => $context}
+    );
+
+    $diff =~ s/^@.*$ \n//xgm;
 
     return $diff;
 }
@@ -205,16 +208,17 @@ sub diff {
 
 
 
+
 __END__
 =pod
 
 =head1 NAME
 
-PICA::Modification - Idempotent modifications of identified PICA+ records
+PICA::Modification - Idempotent modification of an identified PICA+ record
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 SYNOPSIS
 
@@ -267,51 +271,41 @@ of modifications can be stored in a L<PICA::Modification::Queue>.
 
 =head1 METHODS
 
-=head2 check
+=head2 new ( %attributes | { %attributes } | $modification )
 
-Checks and normalized all attributes. A list of error messages is collected,
-each connected to the attribute that an error originates from.
+Creates a new modification from attributes, given as hash, as hash reference or
+as another L<PICA::Modification>. The modification is L<checked|/check> on
+creation, so all attributes are normalized, missing attributes are set to the
+empty string and invalid attributes result in L<errors|/error>.
+
+=head2 attributes
+
+Returns a new hash reference with attributes of this modification.
 
 =head2 error( [ $attribute [ => $message ] ] )
 
 Gets or sets an error message connected to an attribute. Without arguments this
-method returns the number of errors.
+method returns the current number of errors.
 
-=head2 apply ( $pica [, strict => 0|1 ] )
+=head2 check
+
+Normalizes and checks all attributes. Missing values are set to the empty string
+and invalid attributes result in L<errors|/error>. Returns the modification.
+
+=head2 apply ( $pica )
 
 Applies the modification on a given PICA+ record and returns the resulting
 record as L<PICA::Record> or C<undef> on malformed modifications. 
 
 Only edits at level 0 and level 1 are supported by now.
 
-The experimental argument C<strict> can be used to enable additional
-validation. Validation errors are also collected in the PICA::Modification
-object. A valid modification must:
+PPN/ILN/EPN must match or an L<error|/error> is set.
 
-=over 4
+=head2 diff ( $record [, $context ] )
 
-=item *
-
-have a record identifier with PPN equal to the record's PPN (or both have none)
-
-=item *
-
-have ILN/EPN matching to the record's ILN/EPN (if given).
-
-=back
-
-=head2 diff
-
-TODO: Test this!
-
-=head2 new ( %attributes | {%attributes} | $modification )
-
-Creates a new modification with given attributes. Missing attributes are set to
-the empty string. On creation, all attributes are checked and normalized.
-
-=head2 attributes
-
-Returns a hash reference with attributes of this modification.
+Applies the modification to a given PICA+ record and returns a diff on success.
+The context attribute specifies the number of fields before/after each deleted
+or added field. If undefines, all fields are included in the diff.
 
 =head1 SEE ALSO
 

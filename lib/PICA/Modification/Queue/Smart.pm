@@ -1,6 +1,6 @@
 package PICA::Modification::Queue::Smart;
 {
-  $PICA::Modification::Queue::Smart::VERSION = '0.15';
+  $PICA::Modification::Queue::Smart::VERSION = '0.16';
 }
 #ABSTRACT: Queued list of modification requests with checks
 
@@ -86,7 +86,7 @@ sub pending {
     my $before = $self->{via}->( $mod->{id} );
     return unless blessed $before and $before->isa('PICA::Record');
 
-    my $after = $mod->apply( $before, strict => 1 ) || return;
+    my $after = $mod->apply( $before ) || return;
 
     return ($before->string eq $after->string ? 0 : 1);
 }
@@ -104,7 +104,7 @@ PICA::Modification::Queue::Smart - Queued list of modification requests with che
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 SYNOPSIS
 

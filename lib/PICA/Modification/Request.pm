@@ -1,6 +1,6 @@
 package PICA::Modification::Request;
 {
-  $PICA::Modification::Request::VERSION = '0.15';
+  $PICA::Modification::Request::VERSION = '0.16';
 }
 #ABSTRACT: Request for modification of an identified PICA+ record
 
@@ -42,7 +42,7 @@ PICA::Modification::Request - Request for modification of an identified PICA+ re
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 DESCRIPTION
 

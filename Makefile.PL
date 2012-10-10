@@ -9,7 +9,7 @@ use ExtUtils::MakeMaker 6.30;
 
 
 my %WriteMakefileArgs = (
-  "ABSTRACT" => "Idempotent modifications of identified PICA+ records",
+  "ABSTRACT" => "Idempotent modification of an identified PICA+ record",
   "AUTHOR" => "Jakob Vo\303\237 <voss\@gbv.de>",
   "BUILD_REQUIRES" => {
     "Test::Exception" => 0
@@ -35,7 +35,7 @@ my %WriteMakefileArgs = (
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.15",
+  "VERSION" => "0.16",
   "test" => {
     "TESTS" => "t/*.t"
   }

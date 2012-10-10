@@ -1,6 +1,6 @@
 package PICA::Modification::Queue;
 {
-  $PICA::Modification::Queue::VERSION = '0.15';
+  $PICA::Modification::Queue::VERSION = '0.16';
 }
 #ABSTRACT: Queued list of modification requests of PICA+ records
 
@@ -43,7 +43,7 @@ PICA::Modification::Queue - Queued list of modification requests of PICA+ record
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 SYNOPSIS
 

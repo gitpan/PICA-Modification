@@ -1,5 +1,5 @@
 ---
-abstract: 'Idempotent modifications of identified PICA+ records'
+abstract: 'Idempotent modification of an identified PICA+ record'
 author:
   - 'Jakob Voß <voss@gbv.de>'
 build_requires:
@@ -31,4 +31,4 @@ resources:
   bugtracker: https://github.com/gbv/PICA-Modification/issues
   homepage: https://github.com/gbv/PICA-Modification
   repository: https://github.com/gbv/PICA-Modification.git
-version: 0.15
+version: 0.16
